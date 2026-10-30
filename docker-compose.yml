@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports: ["8000:8000"]
+    env_file: .env
+    environment:
+      DB_PATH: /data/assistant.db  # перекрывает DB_PATH из .env: база и история чата живут в томе, а не в /app
+    volumes:
+      - data:/data
+      - vosk:/root/.cache/vosk  # модель озвучки качается один раз
+
+volumes:
+  data:
+  vosk:

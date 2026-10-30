@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Джарвис</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#E9EEF2;--surface:#fff;--text:#1B2430;--muted:#5B6675;--accent:#0F7C80;--accent-text:#fff;--amber:#E8B23A;--border:#D5DCE3;--err:#B42318;--meet:#5961C9;--ok:#0F7C80}
+@media (prefers-color-scheme:dark){:root{--bg:#10161C;--surface:#18212A;--text:#E4EAF0;--muted:#93A0AE;--accent:#3FB8B8;--accent-text:#062224;--amber:#F0C25A;--border:#26313C;--err:#FF8A80;--meet:#8F95F0;--ok:#3FB8B8}}
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}::-webkit-scrollbar-track{background:transparent}
+a{color:var(--accent)}
+.icon{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;width:1.1em;height:1.1em;flex:none;vertical-align:-0.15em}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.5 Onest,system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+button:active:not(:disabled){transform:scale(.96)}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:relative}
+h1{font-size:1.1rem;font-weight:700;margin:0}
+.sw{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.9rem;min-width:0;padding:4px 12px 4px 8px;border:1px solid var(--border);border-radius:99px}
+.sw>span:last-child{min-width:0}
+#vstate{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:52ch}
+#vheard{display:block;font-size:.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:34ch}
+#vheard:empty{display:none}
+.note{display:block;color:var(--muted);font-size:.75rem}
+.lvl{display:block;width:60px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:2px}
+.lvl i{display:block;height:100%;width:0;background:var(--accent)}
+.grow{flex:1}
+#bar{display:flex;align-items:center;gap:8px}
+#who{color:var(--muted);font-size:.9rem;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border);background:transparent;border-radius:10px;padding:6px 12px;cursor:pointer;min-height:36px;transition:background .15s,border-color .15s}
+.btn:hover:not(:disabled){background:var(--bg);border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:600}
+.btn.primary:hover:not(:disabled){background:var(--accent);filter:brightness(1.1)}
+.btn.ic{width:36px;padding:0;border-radius:50%}
+#who,#cal{display:inline-flex;align-items:center;gap:6px}
+#cal{color:var(--ok);font-size:.9rem}
+#who[hidden],#cal[hidden]{display:none}
+#planx{display:none;position:absolute;top:10px;right:10px}
+#planbtn{display:none}
+#pop{position:absolute;right:16px;top:100%;margin-top:6px;z-index:20;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:grid;gap:12px;width:min(300px,calc(100vw - 32px));box-shadow:0 8px 24px rgba(0,0,0,.14)}
+#pop label{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.9rem}
+input[type=range]{-webkit-appearance:none;appearance:none;--p:50%;width:140px;height:20px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(var(--accent),var(--accent)) 0/var(--p) 100% no-repeat,var(--border)}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--border)}
+input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-5px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+input[type=checkbox]{-webkit-appearance:none;appearance:none;position:relative;flex:none;width:36px;height:20px;margin:0;border-radius:99px;background:var(--border);cursor:pointer;transition:background .15s}
+input[type=checkbox]::before{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+input[type=checkbox]:checked{background:var(--accent)}
+input[type=checkbox]:checked::before{transform:translateX(16px)}
+input[type=checkbox]:disabled{opacity:.45;cursor:not-allowed}
+@media (prefers-reduced-motion:reduce){input[type=checkbox],input[type=checkbox]::before,.btn{transition:none}}
+#layout{flex:1;min-height:0;display:flex}
+#chat{flex:1;min-width:0;display:flex;flex-direction:column}
+#log{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:14px;align-items:center}
+#log>*{width:100%;max-width:720px}
+.msg{overflow-wrap:anywhere;white-space:pre-wrap}
+#log>.msg.user{align-self:flex-end;width:fit-content;max-width:min(85%,560px);background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 4px 16px;padding:8px 14px}
+.msg.error{color:var(--err);border:1px solid var(--err);border-radius:10px;padding:8px 12px}
+.msg.reminder{border-left:3px solid var(--amber);padding:2px 0 2px 12px;font-weight:500}
+.msg .icon{margin-right:6px;color:var(--muted)}.msg.reminder .icon{color:var(--amber)}.msg.error .icon{color:var(--err)}
+.note{margin-top:2px}
+.cards{display:grid;gap:6px;margin-top:8px;white-space:normal}
+.card{display:flex;align-items:baseline;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 12px}
+.card time,.pi time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem;min-width:3.4em;flex:none}
+.tag{font-size:.78rem;font-weight:600;flex:none}
+.card .tag{min-width:7.2em}
+.card{align-items:center}
+.card .when{display:flex;flex-direction:column;width:5.8rem;flex:none;line-height:1.15}
+.card .when time{color:var(--text);font-weight:600;font-size:.95rem;min-width:0}
+.card .when .day{color:var(--muted);font-size:.75rem}
+@media (max-width:819px){.card{flex-wrap:wrap;row-gap:0}.card .ttl{flex:1 1 0;min-width:0}.card .tag{order:3;min-width:0;flex-basis:100%;padding-left:calc(5.8rem + 10px)}}
+.tag.task{color:var(--accent)}.tag.reminder{color:#9A6B00}.tag.meeting{color:var(--meet)}
+@media (prefers-color-scheme:dark){.tag.reminder{color:var(--amber)}}
+.ttl{min-width:0;overflow-wrap:anywhere}
+#hint{margin:auto;text-align:center;color:var(--muted);max-width:480px}
+#hint button{display:inline-block;margin:6px 4px 0;padding:8px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer}
+#hint button:hover{border-color:var(--accent)}
+#hint button:active{background:var(--bg)}
+.typing{align-self:flex-start;display:flex;gap:5px;padding:6px 0}
+.typing span{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:b 1.2s infinite}.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes b{0%,60%,100%{opacity:.25}30%{opacity:1}}
+form{display:flex;align-items:flex-end;gap:10px;padding:10px 16px calc(12px + env(safe-area-inset-bottom));width:100%;max-width:752px;margin:0 auto}
+textarea{flex:1;min-width:0;resize:none;max-height:140px;padding:12px 14px;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;font-size:16px}
+textarea::placeholder{color:var(--muted)}
+textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+textarea:focus-visible{outline:none}
+#send .icon{width:20px;height:20px;vertical-align:0}
+#send{width:46px;height:46px;border:0;border-radius:50%;background:var(--accent);color:var(--accent-text);cursor:pointer;display:grid;place-items:center;flex:none;transition:filter .15s}
+#send:hover:not(:disabled),.ring:hover:not(:disabled){filter:brightness(1.1)}
+button:disabled{opacity:.5;cursor:not-allowed}
+/* mic with state ring; --c is the ring colour, set by data-s (same state as #vdot) */
+.ring{--c:var(--border);position:relative;flex:none;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--accent-text);cursor:pointer;display:grid;place-items:center;font-size:.7rem;line-height:1}
+.ring::before{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--c);pointer-events:none}
+.ring::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid transparent;pointer-events:none}
+.ring[data-s=wait]{--c:var(--accent)}
+.ring[data-s=listen]{--c:var(--accent)}.ring[data-s=listen]::before{animation:breathe 1.6s ease-in-out infinite}
+.ring[data-s=think]::before{border-color:transparent}.ring[data-s=think]::after{border-top-color:var(--accent);animation:spin .9s linear infinite}
+.ring[data-s=speak]{--c:var(--accent)}.ring[data-s=speak]::after{border-color:var(--accent);animation:out 1.2s ease-out infinite}
+.ring[data-s=err]{--c:var(--err)}
+.ring.rec{background:var(--err);color:#fff}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--border);flex:none}
+.dot[data-s=wait],.dot[data-s=listen],.dot[data-s=speak]{border-color:var(--accent);background:var(--accent)}
+.dot[data-s=listen]{animation:breathe 1.6s ease-in-out infinite}
+.dot[data-s=think]{border-color:var(--accent) transparent var(--accent) transparent;animation:spin .9s linear infinite}
+.dot[data-s=err]{border-color:var(--err);background:var(--err)}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.12);opacity:.55}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .9s linear infinite}
+@keyframes out{from{transform:scale(1);opacity:.8}to{transform:scale(1.5);opacity:0}}
+@media (prefers-reduced-motion:reduce){.spin,.typing span,.ring::before,.ring::after,.dot{animation:none!important}.ring[data-s=speak]::after{transform:scale(1.2);opacity:.5}}
+#timer{font-size:.7rem;display:block}
+.ring .icon{width:22px;height:22px;vertical-align:0}
+#vload{color:var(--muted)}
+#plan{width:280px;flex:none;overflow-y:auto;padding:20px 16px;border-left:1px solid var(--border);background:var(--bg)}
+#plan{position:relative}
+#plan h2{font-size:.95rem;font-weight:600;margin:0 0 8px}
+#plan section+section{margin-top:20px}
+.pi{display:grid;grid-template-columns:3.1rem 1fr;gap:0 10px;padding:5px 0;border-top:1px solid var(--border);align-items:baseline}
+.pi .ttl{grid-column:2;grid-row:1}.pi .tag{grid-column:2;font-size:.7rem}
+.empty{color:var(--muted);font-size:.9rem}
+.ph{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}.ph h2{margin:0}
+.btn.sm{width:30px;min-height:30px}
+.pi{grid-template-columns:3.1rem 1fr auto;cursor:pointer}
+.pi .ed{grid-column:3;grid-row:1;color:var(--muted);opacity:0;transition:opacity .15s}
+.pi:hover .ed,.pi:focus-visible .ed{opacity:1}
+@media (hover:none){.pi .ed{opacity:.6}}
+.pf{display:grid;gap:8px;padding:10px;margin:6px 0;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.fi{width:100%;min-width:0;min-height:36px;padding:6px 10px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;font-size:.9rem;color-scheme:light dark}
+.fi:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.fi:disabled{opacity:.5}
+select.fi{-webkit-appearance:none;appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a96a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:16px}
+.r2{display:grid;grid-template-columns:1fr auto;gap:8px}
+.seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;padding:6px 4px;min-height:34px;font-size:.8rem;cursor:pointer}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-text);font-weight:600}
+.pa{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pa .ttl{flex:1 1 100%;font-size:.9rem}
+.ferr{color:var(--err);font-size:.85rem;overflow-wrap:anywhere}.ferr:empty{display:none}
+@media (max-width:819px){.fi{font-size:16px}}
+#login .icon{width:2.4rem;height:2.4rem;color:var(--accent);margin-bottom:8px}
+#login{margin:auto;text-align:center;max-width:380px;padding:32px 24px;background:var(--surface);border:1px solid var(--border);border-radius:16px;width:calc(100% - 32px)}
+#login h2{margin:0 0 8px;font-size:1.6rem}
+#login p{color:var(--muted);margin:0 0 20px}
+@media (max-width:819px){
+  #planbtn{display:inline-flex}
+  #plan.open #planx{display:inline-flex}
+  #plan:not(.open){display:none}
+  #plan{position:fixed;padding-top:56px;inset:0 0 0 auto;width:min(320px,100%);z-index:15;box-shadow:-8px 0 24px rgba(0,0,0,.18);background:var(--surface)}
+  #who{display:none}
+  .sw .hide-m{display:none}
+  #vstate{max-width:16ch}
+  header{gap:8px;padding:10px 12px}.sw{flex:1}.grow{display:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+<symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+<symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="i-voice" viewBox="0 0 24 24"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol>
+</defs></svg>
+<header>
+  <h1>Джарвис</h1>
+  <label class="sw" id="sw" hidden><input type="checkbox" id="jarvis" disabled aria-label="Джарвис слушает"><span id="vdot" class="dot" data-s="off" aria-hidden="true"></span><svg class="icon spin" id="vload" aria-hidden="true" hidden><use href="#i-loader"/></svg><span><span id="vstate">выключен</span><small id="vheard"></small><span id="hfnote" class="note" hidden></span><span id="vlvl" class="lvl" hidden><i id="vlvli"></i></span></span></label>
+  <span class="grow"></span>
+  <div id="bar" hidden>
+    <span id="who" hidden><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><span id="whot"></span></span><span id="cal" hidden><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg><span id="calt"></span></span>
+    <button type="button" class="btn" id="planbtn" aria-expanded="false" aria-controls="plan"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>План</button>
+    <button type="button" class="btn ic" id="gear" aria-label="Настройки" aria-expanded="false" aria-controls="pop"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg></button>
+    <button type="button" class="btn" id="logout" hidden><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>Выйти</button>
+  </div>
+  <div id="pop" role="dialog" aria-label="Настройки" hidden>
+    <label>Громкость <input type="range" id="vol" min="0" max="1" step="0.05" value="0.8" aria-label="Громкость"></label>
+    <label>Сигнал <input type="range" id="bvol" min="0" max="1" step="0.05" value="0.5" aria-label="Громкость сигнала"></label>
+    <label>Озвучивать ответы <input type="checkbox" id="speak" checked aria-label="Озвучивать ответы"></label>
+  </div>
+  <audio id="player" hidden></audio>
+</header>
+<div id="layout">
+<div id="chat">
+<main id="log" aria-live="polite" hidden>
+  <div id="hint">
+    Спросите или продиктуйте, например:<br>
+    <button type="button">Что у меня на этой неделе?</button>
+    <button type="button">Напомни завтра в 10 позвонить Ивану</button>
+    <button type="button">Найди задачу про договор</button>
+  </div>
+</main>
+<section id="login" hidden>
+  <svg class="icon" aria-hidden="true"><use href="#i-voice"/></svg>
+  <h2>Джарвис</h2>
+  <p>Задачи, напоминания и встречи голосом или текстом.</p>
+  <p id="loginmsg" hidden></p>
+  <button type="button" class="btn primary" id="loginbtn">Войти через Яндекс</button>
+</section>
+<form id="form" hidden>
+  <textarea id="text" rows="1" placeholder="Напишите сообщение" aria-label="Сообщение"></textarea>
+  <button type="submit" class="send" id="send" aria-label="Отправить"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg></button>
+  <button type="button" class="ring" id="mic" data-s="off" aria-label="Слушать по имени (вкл/выкл) или записать сообщение"></button>
+</form>
+</div>
+<aside id="plan" aria-label="План" hidden>
+  <button type="button" class="btn ic" id="planx" aria-label="Закрыть"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+  <section><div class="ph"><h2>Сегодня</h2><button type="button" class="btn ic sm" id="a0" aria-label="Добавить на сегодня"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></button></div><div id="p0"></div></section>
+  <section><div class="ph"><h2>Завтра</h2><button type="button" class="btn ic sm" id="a1" aria-label="Добавить на завтра"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></button></div><div id="p1"></div></section>
+</aside>
+</div>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var log=$('log'),text=$('text'),send=$('send'),mic=$('mic'),speak=$('speak');
+  var login=$('login'),form=$('form'),polling=null,hpoll=null,gen=0,lastId=0,seen={},rec=null,cancelled=false;
+  var MIC='<svg class="icon" aria-hidden="true"><use href="#i-mic"/></svg>';
+  function rng(i){i.style.setProperty('--p',(i.value-i.min)/(i.max-i.min)*100+'%')}
+  function icon(n){var s=document.createElementNS('http://www.w3.org/2000/svg','svg'),u=document.createElementNS('http://www.w3.org/2000/svg','use');s.setAttribute('class','icon');s.setAttribute('aria-hidden','true');u.setAttribute('href','#i-'+n);s.appendChild(u);return s}
+  mic.innerHTML=MIC;
+  function vs(s){$('vdot').dataset.s=s;mic.dataset.s=s}
+  function showLogin(){
+    clearInterval(polling);polling=null;clearInterval(hpoll);hpoll=null;
+    cancelled=true;hfStop(true);player.pause();if(rec&&rec.state!=='inactive')rec.stop();
+    if(window.speechSynthesis)speechSynthesis.cancel();busy(false);
+    log.hidden=form.hidden=true;$('plan').hidden=$('bar').hidden=$('sw').hidden=true;$('pop').hidden=true;login.hidden=false;
+    if(/[?&]auth_error=1/.test(location.search)){$('loginmsg').hidden=false;$('loginmsg').textContent='Не получилось войти через Яндекс. Попробуйте ещё раз.'}
+  }
+  var pop=$('pop'),gear=$('gear'),plan_=$('plan'),pb=$('planbtn');
+  function popTo(o){pop.hidden=!o;gear.setAttribute('aria-expanded',o)}
+  gear.onclick=function(e){e.stopPropagation();popTo(pop.hidden)};
+  $('planx').onclick=function(){sheet(false)};
+  function sheet(o){plan_.classList.toggle('open',o);pb.setAttribute('aria-expanded',o);if(o)plan()}
+  pb.onclick=function(e){e.stopPropagation();sheet(!plan_.classList.contains('open'))};
+  document.addEventListener('click',function(e){if(!pop.hidden&&!pop.contains(e.target))popTo(false);if(!plan_.contains(e.target))sheet(false)});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(!pop.hidden){popTo(false);gear.focus()}sheet(false)}});
+  $('loginbtn').onclick=function(){location='/auth/login'};
+  $('logout').onclick=async function(){
+    try{var r=await fetch('/auth/logout',{method:'POST'});if(!r.ok)throw 0}
+    catch(e){add('assistant','Не получилось выйти. Попробуйте ещё раз.',{cls:'error'});return}
+    location.href='/';
+  };
+  var KINDS={task:'задача',meeting:'встреча',reminder:'напоминание'};
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+  var sid=ls('sid');
+  if(!sid){sid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random());ls('sid',sid)}
+  speak.checked=ls('speak')!=='0';
+  speak.onchange=function(){ls('speak',speak.checked?'1':'0');if(!speak.checked){$('player').pause();if(window.speechSynthesis)speechSynthesis.cancel()}};
+  var vol=$('vol'),player=$('player');
+  if(ls('vol')!==null)vol.value=ls('vol');
+  player.volume=+vol.value;
+  vol.oninput=function(){rng(vol);player.volume=+vol.value;ls('vol',vol.value)};
+  vol.onchange=function(){fetch('/api/voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({volume:+vol.value})}).catch(function(){})};
+  var bvol=$('bvol');bvol.addEventListener('input',function(){rng(bvol)});rng(vol);rng(bvol);
+  bvol.onchange=function(){fetch('/api/voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({beep_volume:+bvol.value})}).catch(function(){})};
+  // reply to a page-mic turn: same server voice as the speakers, browser voice if the server TTS is unavailable
+  async function speakServer(id,t){
+    if(!speak.checked)return;
+    try{
+      var r=await fetch('/api/speech/'+id);if(!r.ok)throw 0;
+      var u=URL.createObjectURL(await r.blob());
+      player.onended=function(){URL.revokeObjectURL(u)};
+      player.src=u;await player.play();
+    }catch(e){say(t)}
+  }
+
+  // fixed server phrases (allow-list on the server), browser voice as fallback
+  async function speakText(t){
+    if(!speak.checked)return;
+    try{
+      var r=await fetch('/api/speak-text',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});if(!r.ok)throw 0;
+      var u=URL.createObjectURL(await r.blob());
+      player.onended=function(){URL.revokeObjectURL(u)};
+      player.src=u;await player.play();
+    }catch(e){say(t)}
+  }
+
+  function say(t){
+    if(!speak.checked||!window.speechSynthesis||!t)return;
+    var u=new SpeechSynthesisUtterance(t);
+    var v=speechSynthesis.getVoices().filter(function(x){return (x.lang||'').toLowerCase().indexOf('ru')===0})[0];
+    u.lang='ru-RU';if(v)u.voice=v;
+    u.onstart=function(){hfPlay(true)};u.onend=u.onerror=function(){hfPlay(false)};
+    speechSynthesis.speak(u);
+  }
+  function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
+  function hhmm(it){return it.starts_at?new Date(it.starts_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'}):'—'}
+  // день у карточки в чате: ближние дни словами, остальные коротко, год только не текущий
+  function dayLabel(it){
+    var d=it.due_date||(it.starts_at&&msk(Date.parse(it.starts_at)));
+    if(!d)return 'без даты';
+    var t=new Date(d+'T12:00:00Z'),now=new Date(msk(Date.now())+'T12:00:00Z'),n=Math.round((t-now)/864e5);
+    var near={'-1':'вчера',0:'сегодня',1:'завтра',2:'послезавтра'}[n];
+    if(near)return near;
+    var o={weekday:'short',day:'numeric',month:'short',timeZone:'UTC'};
+    if(t.getUTCFullYear()!==now.getUTCFullYear())o.year='numeric';
+    return t.toLocaleDateString('ru-RU',o).replace(/\./g,'').replace(/\s*г$/,'');
+  }
+  function card(it,cls){
+    var c=el('div',cls);
+    if(cls==='card'){var w=el('span','when');w.appendChild(el('time',null,hhmm(it)));w.appendChild(el('span','day',dayLabel(it)));c.appendChild(w)}
+    else c.appendChild(el('time',null,hhmm(it)));
+    c.appendChild(el('span','tag '+it.kind,KINDS[it.kind]||it.kind));
+    c.appendChild(el('span','ttl',it.title||''));
+    return c;
+  }
+  // right panel: today and tomorrow, MSK dates
+  function msk(ms){return new Date(ms).toLocaleDateString('sv',{timeZone:'Europe/Moscow'})}
+  var planT=null,planN=0;
+  function planSoon(){clearTimeout(planT);planT=setTimeout(plan,400)}
+  // add / edit / delete form: same server handlers as the chat; the chat history is not touched
+  var DUR=[15,30,45,60,90,120,180],KORDER=['task','reminder','meeting'];
+  function durText(n){return n<60?n+' мин':n%60?Math.floor(n/60)+' ч '+n%60+' мин':n/60+' ч'}
+  async function pcall(m,u,b){
+    try{
+      var r=await fetch(u,{method:m,headers:{'Content-Type':'application/json'},body:b&&JSON.stringify(b)});
+      if(r.status===401){showLogin();return 'Войдите, чтобы продолжить.'}
+      if(r.ok)return null;
+      var d={};try{d=await r.json()}catch(e){}
+      return d.reply||'Ошибка сервера ('+r.status+')';
+    }catch(e){return 'Нет связи с сервером'}
+  }
+  function fld(tag,cls,label){var e=el(tag,cls);e.setAttribute('aria-label',label);return e}
+  function pform(it,day){
+    var f=el('div','pf'),kind=it?it.kind:'task';
+    var ti=fld('input','fi','Название');ti.type='text';ti.maxLength=200;ti.placeholder='Название';ti.value=it?it.title:'';
+    var seg=el('div','seg'),bs=KORDER.map(function(k){
+      var b=el('button',null,KINDS[k]);b.type='button';
+      b.onclick=function(e){e.stopPropagation();kind=k;sync()};seg.appendChild(b);return b;
+    });
+    seg.setAttribute('role','group');seg.setAttribute('aria-label','Вид записи');
+    var dt=fld('input','fi','Дата');dt.type='date';dt.value=it?(it.starts_at?msk(Date.parse(it.starts_at)):it.due_date):day;
+    if(it&&it.rrule){dt.disabled=true;dt.title='Дату серии здесь не меняют'}
+    var tm=fld('input','fi','Время, можно не указывать');tm.type='time';tm.value=it&&it.starts_at?hhmm(it):'';
+    var cur=it&&it.ends_at&&it.starts_at?Math.round((Date.parse(it.ends_at)-Date.parse(it.starts_at))/6e4):0;
+    var du=fld('select','fi','Длительность встречи');du.appendChild(new Option('Длительность по умолчанию',''));
+    (cur&&DUR.indexOf(cur)<0?DUR.concat(cur).sort(function(a,b){return a-b}):DUR).forEach(function(n){du.appendChild(new Option(durText(n),n))});
+    du.value=cur||'';
+    var err=el('div','ferr');err.setAttribute('role','alert');
+    var acts=el('div','pa'),sv=el('button','btn primary','Сохранить'),cn=el('button','btn','Отмена');
+    sv.type=cn.type='button';acts.append(sv,cn);
+    var ask=el('div','pa'),yes=el('button','btn','Да'),no=el('button','btn','Нет');ask.hidden=true;
+    yes.type=no.type='button';
+    if(it){
+      var del=el('button','btn');del.type='button';del.append(icon('trash'),'Удалить');acts.appendChild(del);
+      ask.append(el('span','ttl','Удалить «'+it.title+'»?'),yes,no);
+      del.onclick=function(e){e.stopPropagation();acts.hidden=true;ask.hidden=false;yes.focus()};
+      no.onclick=function(e){e.stopPropagation();ask.hidden=true;acts.hidden=false;del.focus()};
+      yes.onclick=async function(e){
+        e.stopPropagation();yes.disabled=no.disabled=true;
+        var m=await pcall('DELETE','/api/items/'+it.id);yes.disabled=no.disabled=false;
+        if(m)err.textContent=m;else done();
+      };
+    }
+    function sync(){bs.forEach(function(b,i){b.setAttribute('aria-pressed',KORDER[i]===kind)});du.hidden=kind!=='meeting'}
+    function done(){f.remove();plan()}
+    sv.onclick=async function(e){
+      e.stopPropagation();
+      var b={kind:kind,title:ti.value.trim(),time:tm.value||null,duration_minutes:kind==='meeting'&&du.value?+du.value:null};
+      if(!dt.disabled)b.date=dt.value;
+      if(!b.title)return err.textContent='Введите название.';
+      if(!dt.disabled&&!b.date)return err.textContent='Укажите дату.';
+      sv.disabled=true;err.textContent='';
+      var m=await pcall(it?'PATCH':'POST',it?'/api/items/'+it.id:'/api/items',b);sv.disabled=false;
+      if(m)err.textContent=m;else done();
+    };
+    cn.onclick=function(e){e.stopPropagation();done()};
+    f.onclick=function(e){e.stopPropagation()};
+    f.onkeydown=function(e){
+      if(e.key==='Escape'){e.stopPropagation();done()}
+      else if(e.key==='Enter'&&e.target===ti){e.preventDefault();sv.click()}
+    };
+    var r2=el('div','r2');r2.append(dt,tm);
+    f.append(ti,seg,r2,du,err,acts,ask);sync();
+    return f;
+  }
+  function openForm(box,it,day,row){
+    var old=$('plan').querySelector('.pf');if(old){old.querySelector('input').focus();return}
+    var f=pform(it,day);
+    if(row)row.replaceWith(f);else box.prepend(f);
+    f.querySelector('input').focus();
+  }
+  [0,1].forEach(function(k){$('a'+k).onclick=function(e){e.stopPropagation();openForm($('p'+k),null,msk(Date.now()+k*864e5))}});
+  async function plan(){
+    if($('plan').querySelector('.pf'))return;  // do not wipe a form being filled
+    var n=++planN,d0=msk(Date.now()),d1=msk(Date.now()+864e5);
+    try{
+      var r=await fetch('/api/items?from='+d0+'&to='+d1+'&status=open');
+      if(r.status===401)return showLogin();if(!r.ok||n!==planN)return;
+      var its=await r.json();
+      [d0,d1].forEach(function(d,k){
+        var box=$('p'+k);box.textContent='';
+        var l=its.filter(function(it){return (it.starts_at?msk(Date.parse(it.starts_at)):it.due_date)===d})
+          .sort(function(a,b){return (a.starts_at?Date.parse(a.starts_at):1e15)-(b.starts_at?Date.parse(b.starts_at):1e15)});
+        if(!l.length)box.appendChild(el('div','empty','Ничего не запланировано'));
+        l.forEach(function(it){
+          var row=card(it,'pi'),open=function(e){e.stopPropagation();openForm(box,it,d,row)};
+          row.tabIndex=0;row.setAttribute('role','button');row.setAttribute('aria-label','Изменить: '+(it.title||''));
+          var pe=icon('pencil');pe.setAttribute('class','icon ed');row.appendChild(pe);
+          row.onclick=open;row.onkeydown=function(e){if(e.target===row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();open(e)}};
+          box.appendChild(row);
+        });
+      });
+    }catch(e){}
+  }
+  function add(role,t,o){
+    o=o||{};
+    var h=$('hint');if(h)h.remove();
+    var m=el('div','msg '+role+(o.cls?' '+o.cls:''),t);
+    if((o.items||[]).length){var cs=el('div','cards');o.items.forEach(function(it){cs.appendChild(card(it,'card'))});m.appendChild(cs)}
+    if(o.icon)m.insertBefore(icon(o.icon),m.firstChild);
+    if(o.note)m.appendChild(el('span','note',o.note));
+    if(role==='assistant')planSoon();
+    log.appendChild(m);log.scrollTop=log.scrollHeight;
+    return m;
+  }
+  var typing=null;
+  function busy(b){
+    send.disabled=b;
+    if(b&&!typing){typing=el('div','typing');typing.innerHTML='<span></span><span></span><span></span>';typing.setAttribute('aria-label','Печатает');log.appendChild(typing);log.scrollTop=log.scrollHeight}
+    if(!b&&typing){typing.remove();typing=null}
+  }
+  async function post(url,opts,spoken){
+    busy(true);
+    try{
+      var r=await fetch(url,opts),d={};
+      if(r.status===401)return showLogin();
+      try{d=await r.json()}catch(e){}
+      gen++;var ids=d.message_ids||[];ids.forEach(function(i){seen[i]=1});
+      if(d.transcript)add('user',d.transcript,{icon:'voice'});
+      var reply=d.reply||(r.ok?'':'Ошибка сервера ('+r.status+')');
+      var err=!!d.error||!r.ok;
+      if(reply||(d.items&&d.items.length))add('assistant',reply,{items:d.items,cls:err?'error':'',note:d.clarify?'жду ответа':''});
+      if(spoken&&d.speak_id&&reply)speakServer(d.speak_id,reply);
+    }catch(e){add('assistant','Нет связи с сервером',{cls:'error'})}
+    finally{busy(false)}
+  }
+  function sendText(t){
+    t=(t||'').trim();if(!t||send.disabled)return;
+    add('user',t);text.value='';
+    post('/api/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,text:t})});
+  }
+  $('form').onsubmit=function(e){e.preventDefault();sendText(text.value)};
+  text.onkeydown=function(e){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendText(text.value)}};
+  document.querySelectorAll('#hint button').forEach(function(b){b.onclick=function(){sendText(b.textContent)}});
+
+  // voice input
+  var chunks=[],tick=null,stopT=null,starting=false;
+  function stopRec(){if(rec&&rec.state!=='inactive')rec.stop()}
+  mic.onclick=async function(){
+    if(hf.cfg&&hf.cfg.wake_word&&!hf.busy)return hf.on?hfStop():hfStart();
+    if(rec&&rec.state==='recording')return stopRec();
+    if(send.disabled||starting)return;
+    starting=true;
+    var stream;
+    try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
+    catch(e){starting=false;add('assistant','Нужен доступ к микрофону (HTTPS или localhost)',{cls:'error'});return}
+    if(!login.hidden){stream.getTracks().forEach(function(t){t.stop()});starting=false;return}
+    var mt='audio/webm;codecs=opus';
+    try{rec=new MediaRecorder(stream,MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(mt)?{mimeType:mt}:undefined)}
+    catch(e){stream.getTracks().forEach(function(t){t.stop()});starting=false;add('assistant','Запись не поддерживается',{cls:'error'});return}
+    chunks=[];cancelled=false;
+    rec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data)};
+    rec.onstop=function(){
+      clearInterval(tick);clearTimeout(stopT);
+      stream.getTracks().forEach(function(t){t.stop()});
+      mic.classList.remove('rec');mic.innerHTML=MIC;
+      if(cancelled||!chunks.length)return;
+      var fd=new FormData();fd.append('session_id',sid);
+      fd.append('file',new Blob(chunks,{type:rec.mimeType||'audio/webm'}),'voice.webm');
+      post('/api/audio',{method:'POST',body:fd},true);
+    };
+    try{rec.start()}
+    catch(e){stream.getTracks().forEach(function(t){t.stop()});add('assistant','Запись не поддерживается',{cls:'error'});return}
+    finally{starting=false}
+    var s=0;mic.classList.add('rec');mic.innerHTML='<svg class="icon" aria-hidden="true"><use href="#i-stop"/></svg><span id="timer">0:00</span>';
+    tick=setInterval(function(){s++;$('timer').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')},1000);
+    stopT=setTimeout(stopRec,30000);
+  };
+  if(!navigator.mediaDevices||!window.MediaRecorder)mic.disabled=true;
+
+  // hands-free: continuous mic, energy VAD, each phrase goes to /api/listen, the server decides by the wake word
+  var hf={on:false,busy:false,cfg:null,posting:false,playing:false,rec:null,open:0,hold:0,played:0,pstart:0,shown:''};
+  function hfWin(){return hf.cfg.session_silence*1000}
+  function hfPlay(on){
+    var now=Date.now();
+    if(on&&!hf.playing)hf.pstart=now;
+    if(!on&&hf.playing){hf.played+=(now-hf.pstart)/1000;hf.hold=now+300;if(hf.cfg)hf.open=now+hfWin()}
+    hf.playing=on;
+  }
+  ['playing','play'].forEach(function(n){player.addEventListener(n,function(){hfPlay(true)})});
+  ['ended','pause','error'].forEach(function(n){player.addEventListener(n,function(){hfPlay(false)})});
+  function hfShow(){
+    if(!hf.on)return;
+    var s=hf.playing&&!hf.wake?'speak':hf.wake?'listen':hf.posting?'think':(hf.rec||hf.open>Date.now())?'listen':'wait';
+    if(s===hf.shown)return;hf.shown=s;
+    vs(s);
+    $('vstate').textContent={speak:'отвечаю',think:'думаю',listen:'слушаю',wait:'жду «'+hf.cfg.wake_word+'»'}[s];
+    
+  }
+  function hfEnd(keep){var r=hf.rec;hf.rec=null;if(!r)return;r.keep=keep;if(r.state!=='inactive')r.stop()}
+  function hfBegin(){
+    var mt='audio/webm;codecs=opus',ch=[];
+    var r=new MediaRecorder(hf.stream,MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(mt)?{mimeType:mt}:undefined);
+    r.ondataavailable=function(e){if(e.data.size)ch.push(e.data)};
+    r.onstop=function(){if(r.keep&&ch.length)hfSend(new Blob(ch,{type:r.mimeType||'audio/webm'}))};
+    r.start();hf.rec=r;hf.voiced=hf.quiet=hf.len=0;
+  }
+  // запись стартует с первого громкого кадра, первые ~30 мс фразы теряются; если имена обрезаются, держать скользящую запись
+  function hfTick(){
+    var now=Date.now(),dt=now-hf.t;hf.t=now;
+    hf.an.getFloatTimeDomainData(hf.buf);
+    var s=0,i;for(i=0;i<hf.buf.length;i++)s+=hf.buf[i]*hf.buf[i];
+    var e=Math.sqrt(s/hf.buf.length);
+    if(hf.playing||hf.posting||now<hf.hold){hfEnd(false);return hfShow()}
+    // adaptive floor: slow EMA over quiet frames only, so speech or a click never poisons the threshold
+    if(e<=hf.thr){hf.noise=hf.noise?hf.noise+0.02*(e-hf.noise):e;hf.thr=Math.max(0.01,hf.noise*3)}
+    $('vlvli').style.width=Math.min(100,e/hf.thr*100)+'%';
+    var loud=e>hf.thr;
+    if(!hf.rec){if(!loud)return hfShow();hfBegin()}
+    if(loud){hf.voiced+=dt;hf.quiet=0}else hf.quiet+=dt;
+    hf.len+=dt;
+    if(hf.quiet>=hf.cfg.phrase_pause*1000||hf.len>=30000)hfEnd(hf.voiced>=400);
+    hfShow();
+  }
+  async function hfSend(blob){
+    hf.posting=true;hfShow();
+    var fd=new FormData();fd.append('session_id',sid);fd.append('played',Math.min(60,hf.played).toFixed(2));hf.played=0;
+    fd.append('file',blob,'voice.webm');
+    try{
+      var r=await fetch('/api/listen',{method:'POST',body:fd}),d={};
+      if(r.status===401)return showLogin();
+      try{d=await r.json()}catch(e){}
+      if(r.status===409){voice();return}
+      var ids=d.message_ids||[];ids.forEach(function(i){seen[i]=1});gen++;
+      if(!d.heard&&!ids.length)return;  // background speech or a failed recognition: stay silent
+      hf.open=Date.now()+hfWin();
+      if(d.wake){hf.wake=true;hf.shown='';try{await speakText(d.reply)}finally{hf.wake=false}return}
+      if(d.transcript)add('user',d.transcript,{icon:'voice'});
+      var reply=d.reply||'';
+      if(reply||(d.items&&d.items.length))add('assistant',reply,{items:d.items,cls:d.error||!r.ok?'error':'',note:d.clarify?'жду ответа':''});
+      if(d.speech&&ids.length&&reply)await speakServer(ids[ids.length-1],reply);
+    }catch(e){}
+    finally{hf.posting=false;hf.hold=Date.now()+300}
+  }
+  async function hfStart(){
+    if(hf.on||hf.busy)return;
+    var stream,ctx;
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+      ctx=new (window.AudioContext||window.webkitAudioContext)();await ctx.resume();
+    }catch(e){
+      if(stream)stream.getTracks().forEach(function(t){t.stop()});
+      ls('hf','0');add('assistant','Нужен доступ к микрофону (HTTPS или localhost)',{cls:'error'});return;
+    }
+    hf.an=ctx.createAnalyser();hf.an.fftSize=1024;hf.buf=new Float32Array(1024);
+    ctx.createMediaStreamSource(stream).connect(hf.an);
+    hf.stream=stream;hf.ctx=ctx;hf.thr=0.01;hf.noise=0;$('vlvl').hidden=false;hf.t=Date.now();hf.open=0;hf.shown='';hf.on=true;
+    ls('hf','1');hf.timer=setInterval(hfTick,30);hfShow();
+  }
+  function hfStop(keepPref){
+    if(!hf.on)return;
+    clearInterval(hf.timer);hfEnd(false);
+    hf.stream.getTracks().forEach(function(t){t.stop()});hf.ctx.close();
+    hf.on=false;if(!keepPref)ls('hf','0');
+    $('vlvl').hidden=true;vs('off');voice();
+  }
+
+  // history: initial last 50, then poll for new records; own messages are skipped via seen
+  async function history(first){
+    if(!first&&(send.disabled||(rec&&rec.state==='recording')))return;
+    try{
+      var g=gen,r=await fetch('/api/history?after='+lastId+(first?'&limit=50':''));
+      if(g!==gen)return;  // a send finished meanwhile: its ids are not in seen yet for this batch
+      if(r.status===401)return showLogin();if(!r.ok)return;
+      (await r.json()).forEach(function(m){
+        lastId=Math.max(lastId,m.id);if(seen[m.id])return;seen[m.id]=1;
+        var t=m.text.replace(/^\u23F0 /,''),rem=m.role==='assistant'&&t.indexOf('Напоминание: ')===0;
+        add(m.role,t,{items:m.items,cls:rem?'reminder':'',icon:rem?'bell':m.source==='voice'&&m.role==='user'?'voice':''});
+      });
+    }catch(e){}
+  }
+
+  // voice mode: state words next to the switch
+  var WORDS={listening:'слушаю',recognizing:'распознаю',thinking:'думаю',speaking:'отвечаю',off:'выключен'};
+  function showVoice(v){
+    if(v.wake_word)hf.cfg=v;
+    hf.busy=!!(v.enabled&&v.available);
+    mic.disabled=hf.busy||!navigator.mediaDevices||!window.MediaRecorder;
+    $('hfnote').hidden=!hf.busy;$('hfnote').textContent=hf.busy?'Джарвис уже слушает микрофон компьютера':'';
+    if(hf.busy&&hf.on)hfStop(true);
+    var st=v.state;if(hf.on)return;vs(!v.enabled?'off':st==='listening'?'listen':st==='waiting'?'wait':st==='speaking'?'speak':st==='error'?'err':'think');
+    if(v.available&&v.volume!==undefined&&document.activeElement!==vol)vol.value=v.volume,player.volume=v.volume,rng(vol);
+    if(v.beep_volume!==undefined&&document.activeElement!==bvol){bvol.value=v.beep_volume;rng(bvol)}
+    var lh=v.last_heard,vh=$('vheard');vh.textContent=lh?(lh.used?'услышал: '+lh.text:'услышал фразу без имени'):'';vh.style.color=lh&&lh.used?'':'var(--muted)';
+    $('jarvis').checked=v.enabled;$('jarvis').disabled=!v.available;
+    mic.title=v.tts_ready===false?'Голос загружается (около минуты), микрофон уже работает':'';
+    $('vload').hidden=v.tts_ready!==false;
+    $('vstate').textContent=(!v.available||v.state==='error'||v.state==='loading'?(v.detail||'ошибка'):
+      v.state==='waiting'?'жду «'+v.wake_word+'»':(WORDS[v.state]||v.state));
+  }
+  async function voice(){
+    try{var r=await fetch('/api/voice');if(r.ok)showVoice(await r.json())}catch(e){}
+  }
+  $('jarvis').onchange=async function(){
+    try{
+      var r=await fetch('/api/voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:this.checked})});
+      if(r.ok)showVoice(await r.json());else voice();
+    }catch(e){voice()}
+  };
+
+  // reminders
+  async function poll(){
+    try{
+      var r=await fetch('/api/reminders/due',{method:'POST'});if(r.status===401)return showLogin();if(!r.ok)return;
+      (await r.json()).forEach(function(it){
+        var t='Напоминание: '+(it.title||'');
+        say(t);
+      });
+    }catch(e){}
+  }
+  (async function(){
+    try{
+      var r=await fetch('/api/me');
+      if(r.status===401)return showLogin();
+      if(!r.ok)throw 0;
+      var u=await r.json();
+      $('whot').textContent=u.display_name||u.login||'';$('who').hidden=false;$('bar').hidden=$('sw').hidden=false;
+      if(u.calendar){$('calt').textContent='Календарь подключён';$('cal').hidden=false}
+      // id гостя означает AUTH_DISABLED; заменить явным флагом, если /api/me его получит
+      $('logout').hidden=u.user_id==='default';
+    }catch(e){log.hidden=form.hidden=false;$('bar').hidden=$('sw').hidden=false;add('assistant','Не удалось проверить вход. Обновите страницу.',{cls:'error'});return}
+    log.hidden=form.hidden=false;$('plan').hidden=false;
+    await history(true);await voice();if(ls('hf')==='1'&&hf.cfg&&hf.cfg.wake_word&&!hf.busy)hfStart();
+    hpoll=setInterval(function(){history();voice()},1500);
+    poll();polling=setInterval(poll,30000);
+  })();
+})();
+</script>
+</body>
+</html>

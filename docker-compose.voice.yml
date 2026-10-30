@@ -1,0 +1,11 @@
+# Джарвис в контейнере: микрофон и динамики хоста через сокет PulseAudio/PipeWire. Только Linux-хост.
+# Отдельный файл, чтобы базовый docker-compose.yml запускался и там, где этого сокета нет (macOS, Windows).
+# docker compose -f docker-compose.yml -f docker-compose.voice.yml up
+services:
+  app:
+    environment:
+      PULSE_SERVER: unix:/run/pulse/native
+      VOICE_ENABLED: ${VOICE_ENABLED:-1}
+    volumes:
+      - ${XDG_RUNTIME_DIR}/pulse/native:/run/pulse/native
+    security_opt: [label=disable]  # SELinux (Fedora) иначе не пускает к сокету хоста
